@@ -1,0 +1,19 @@
+python3 training_sac.py \
+	--policy "Gaussian" \
+	--eval True \
+	--gamma 0.99 \
+	--tau 0.005 \
+	--lr 3e-4 \
+	--alpha 0.2 \
+	--automatic_entropy_tuning True \
+	--seed 123456 \
+	--batch_size 256 \
+	--total_maximum_steps 100000000000000000 \
+	--hidden_size 256 \
+	--updates_per_step 1 \
+	--start_steps_with_random 500 \
+	--target_update_interval 1\
+	--replay_size 100000000 \
+	--cuda \
+	--max_episode_steps 300 \
+	--test_maximum_episodes 10
