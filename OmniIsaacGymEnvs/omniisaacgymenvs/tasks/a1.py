@@ -95,7 +95,7 @@ class A1Task(RLTask):
         self._num_envs = self._task_cfg["env"]["numEnvs"]
         self._a1_translation = torch.tensor([0.0, 0.0, 0.35])
         self._env_spacing = self._task_cfg["env"]["envSpacing"]
-        self._num_observations = 48
+        self._num_observations = 36
         self._num_actions = 12
 
         RLTask.__init__(self, name, env)
@@ -178,11 +178,6 @@ class A1Task(RLTask):
 
         dof_pos_scaled = (dof_pos - self.default_dof_pos) * self.dof_pos_scale
 
-        commands_scaled = self.commands * torch.tensor(
-            [self.lin_vel_scale, self.lin_vel_scale, self.ang_vel_scale],
-            requires_grad=False,
-            device=self.commands.device,
-        )
         
         
         #get foot force
