@@ -61,32 +61,21 @@ class A1Task(RLTask):
         self.delta_q = 0.
 
         # normalization
-        self.lin_vel_scale = self._task_cfg["env"]["learn"]["linearVelocityScale"]
-        self.ang_vel_scale = self._task_cfg["env"]["learn"]["angularVelocityScale"]
         self.dof_pos_scale = self._task_cfg["env"]["learn"]["dofPositionScale"]
         self.dof_vel_scale = self._task_cfg["env"]["learn"]["dofVelocityScale"]
         self.action_scale = self._task_cfg["env"]["control"]["actionScale"]
 
         # reward scales
         self.rew_scales = {}
-        self.rew_scales["lin_vel_xy"] = self._task_cfg["env"]["learn"]["linearVelocityXYRewardScale"]
-        self.rew_scales["ang_vel_z"] = self._task_cfg["env"]["learn"]["angularVelocityZRewardScale"]
-        self.rew_scales["lin_vel_z"] = self._task_cfg["env"]["learn"]["linearVelocityZRewardScale"]
         self.rew_scales["joint_acc"] = self._task_cfg["env"]["learn"]["jointAccRewardScale"]
         self.rew_scales["action_rate"] = self._task_cfg["env"]["learn"]["actionRateRewardScale"]
         self.rew_scales["cosmetic"] = self._task_cfg["env"]["learn"]["cosmeticRewardScale"]
 
-        # command ranges
-        self.command_x_range = self._task_cfg["env"]["randomCommandVelocityRanges"]["linear_x"]
-        self.command_y_range = self._task_cfg["env"]["randomCommandVelocityRanges"]["linear_y"]
-        self.command_yaw_range = self._task_cfg["env"]["randomCommandVelocityRanges"]["yaw"]
 
         # base init state
         pos = self._task_cfg["env"]["baseInitState"]["pos"]
         rot = self._task_cfg["env"]["baseInitState"]["rot"]
-        v_lin = self._task_cfg["env"]["baseInitState"]["vLinear"]
-        v_ang = self._task_cfg["env"]["baseInitState"]["vAngular"]
-        state = pos + rot + v_lin + v_ang
+        state = pos + rot
 
         self.base_init_state = state
 
@@ -187,13 +176,6 @@ class A1Task(RLTask):
         self.torso_y =torso_position[:,1]
         self.torso_z =torso_position[:,2]
 
-
-        velocity = root_velocities[:, 0:3]
-        ang_velocity = root_velocities[:, 3:6]
-        
-        base_lin_vel = quat_rotate_inverse(torso_rotation, velocity) * self.lin_vel_scale
-        base_ang_vel = quat_rotate_inverse(torso_rotation, ang_velocity) * self.ang_vel_scale
-        projected_gravity = quat_rotate(torso_rotation, self.gravity_vec)
         dof_pos_scaled = (dof_pos - self.default_dof_pos) * self.dof_pos_scale
 
         commands_scaled = self.commands * torch.tensor(
@@ -220,10 +202,7 @@ class A1Task(RLTask):
 
         obs = torch.cat(
             (
-                base_lin_vel,
-                base_ang_vel,
-                projected_gravity,
-                commands_scaled,
+
                 dof_pos_scaled,
                 dof_vel * self.dof_vel_scale,
                 self.actions,
@@ -330,15 +309,6 @@ class A1Task(RLTask):
         self._a1s.set_world_poses(self.initial_root_pos[env_ids].clone(), self.initial_root_rot[env_ids].clone(), indices)
         self._a1s.set_velocities(root_vel, indices)
 
-        self.commands_x[env_ids] = torch_rand_float(
-            self.command_x_range[0], self.command_x_range[1], (num_resets, 1), device=self._device
-        ).squeeze()
-        self.commands_y[env_ids] = torch_rand_float(
-            self.command_y_range[0], self.command_y_range[1], (num_resets, 1), device=self._device
-        ).squeeze()
-        self.commands_yaw[env_ids] = torch_rand_float(
-            self.command_yaw_range[0], self.command_yaw_range[1], (num_resets, 1), device=self._device
-        ).squeeze()
 
         # bookkeeping
         self.reset_buf[env_ids] = 0
@@ -355,10 +325,6 @@ class A1Task(RLTask):
         self.a1_dof_lower_limits = dof_limits[0, :, 0].to(device=self._device)
         self.a1_dof_upper_limits = dof_limits[0, :, 1].to(device=self._device)
 
-        self.commands = torch.zeros(self._num_envs, 3, dtype=torch.float, device=self._device, requires_grad=False)
-        self.commands_y = self.commands.view(self._num_envs, 3)[..., 1]
-        self.commands_x = self.commands.view(self._num_envs, 3)[..., 0]
-        self.commands_yaw = self.commands.view(self._num_envs, 3)[..., 2]
 
         # initialize some data used later on
         self.extras = {}
@@ -389,11 +355,6 @@ class A1Task(RLTask):
         dof_pos = self._a1s.get_joint_positions(clone=False)
         dof_vel = self._a1s.get_joint_velocities(clone=False)
 
-        velocity = root_velocities[:, 0:3]
-        ang_velocity = root_velocities[:, 3:6]
-
-        base_lin_vel = quat_rotate_inverse(torso_rotation, velocity)
-        base_ang_vel = quat_rotate_inverse(torso_rotation, ang_velocity)
 
         # velocity tracking reward
         
