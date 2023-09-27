@@ -50,4 +50,4 @@ docker run \
   -e DISPLAY=$DISPLAY \
   -e NVIDIA_VISIBLE_DEVICES=all \
   -e NVIDIA_DRIVER_CAPABILITIES=all \
-  -it --rm --name "isaacgym-docker" isaacgym-docker:2022.2.0
+  -it --name "isaacgym-docker" isaacgym-docker:2022.2.0

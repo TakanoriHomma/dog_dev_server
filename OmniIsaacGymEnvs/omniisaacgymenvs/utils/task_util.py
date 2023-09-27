@@ -32,6 +32,8 @@ def initialize_task(config, env, init_sim=True):
     from omniisaacgymenvs.tasks.a1_bipedal import A1_bipedal_Task
     from omniisaacgymenvs.tasks.a1_terrain import A1TerrainTask
     from omniisaacgymenvs.tasks.go1 import Go1Task
+    
+    from omniisaacgymenvs.tasks.a1_snn import A1SnnTask
 
     
     # Mappings from strings to environments
@@ -40,6 +42,7 @@ def initialize_task(config, env, init_sim=True):
         "A1_bipedal": A1_bipedal_Task,
         "Go1": Go1Task,
         "A1Terrain": A1TerrainTask,
+        "A1_snn": A1SnnTask,
     }
 
     from .config_utils.sim_config import SimConfig
